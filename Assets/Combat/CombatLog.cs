@@ -1,12 +1,17 @@
+using System;
 using System.Collections.Generic;
 
 public class CombatLog
 {
     private readonly Stack<CombatState> stateStack = new();
     private CombatState CurrentState => stateStack.Peek();
-    
-    void RecordAction(ICombatAction action)
+
+    public event Action<CombatState> OnStateChanged;
+
+    void PerformAction(ICombatAction action)
     {
-        stateStack.Push(action.Apply(CurrentState));
+        var state = CurrentState;
+        action.Apply(ref state);
+        stateStack.Push(state);
     }
 }

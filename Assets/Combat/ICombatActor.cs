@@ -1,11 +1,8 @@
-public interface ICombatActor
+using UnityEngine;
+
+public interface ICombatActor : IBinarySerializable
 {
     public void NotifyTurnStart(TurnInfo turnInfo);
     public int Alignment { get; }
-    public IState State { get; }
-    interface IState
-    {
-        byte[] Bytes { get; }
-        void PopulateFromBytes(byte[] bytes);
-    }
+    public Vector2Int Position { get; set; }
 }

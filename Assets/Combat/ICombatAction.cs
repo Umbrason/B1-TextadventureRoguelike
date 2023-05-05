@@ -1,4 +1,4 @@
 public interface ICombatAction
 {
-    void Apply(CombatState state);
+    void Apply(ref CombatState state);
 }

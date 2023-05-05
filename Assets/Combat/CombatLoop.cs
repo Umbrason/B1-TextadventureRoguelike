@@ -5,7 +5,7 @@ public class CombatLoop
     private List<ICombatActor> combatActors;
     private Queue<ICombatActor> turnQueue;
 
-    private CombatLog log;
+    private CombatLog CombatLog;
 
 
     private ICombatActor activeActor;
@@ -19,6 +19,6 @@ public class CombatLoop
     {
         activeActor = turnQueue.Dequeue();
         var currentActiveActor = activeActor;
-        activeActor.NotifyTurnStart(new(() => { if (this.activeActor == currentActiveActor) EndTurn(); }, log));
+        activeActor.NotifyTurnStart(new(() => { if (this.activeActor == currentActiveActor) EndTurn(); }, CombatLog));
     }
 }
