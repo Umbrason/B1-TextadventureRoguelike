@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: bec3755c90077a943af7936d7c3c2ce0
+guid: 993937ee2f6b23a459f2359adc6b1198
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
@@ -9,11 +9,11 @@ TrueTypeFontImporter:
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - Mystery Font
+  - PixelFont
   fallbackFontReferences:
-  - {fileID: 12800000, guid: fcc9450055c5ac749829e88be5774cda, type: 3}
+  - {fileID: 12800000, guid: d5473d8c2aa8333448932670fc30c071, type: 3}
   customCharacters: 
-  fontRenderingMode: 2
+  fontRenderingMode: 0
   ascentCalculationMode: 1
   useLegacyBoundsCalculation: 0
   shouldRoundAdvanceValue: 1

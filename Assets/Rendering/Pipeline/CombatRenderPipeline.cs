@@ -94,7 +94,7 @@ public class CombatRenderPipeline
         }
         public enum Priority
         {
-            FLOORPLAN = 0, TILEMODIFIER = 1000, ACTOR = 2000
+            FLOORPLAN = 0, TILEMODIFIER = 1000, COMBATACTORS = 2000
         }
         public Priority PassPriority { get; }
         public void Execute(RenderingData data);

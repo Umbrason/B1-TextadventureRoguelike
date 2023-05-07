@@ -33,7 +33,7 @@ public class Room
                     _ => Tile.VOID,
                 };
                 if (tileType == Tile.VOID) continue;
-                layoutDict.Add(new(w, lines.Length - h), tileType);
+                layoutDict.Add(new(w, lines.Length - h - 1), tileType);
             }
         }
         return layoutDict;

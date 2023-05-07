@@ -1,6 +1,6 @@
 using System;
 
-public struct TurnInfo
+public class TurnInfo
 {
     private Action EndTurnAction;
     public CombatLog Log { get; }

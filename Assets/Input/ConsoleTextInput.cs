@@ -3,12 +3,10 @@ using System;
 using TMPro;
 using UnityEngine;
 
-[RequireComponent(typeof(TMP_InputField))]
 public class ConsoleTextInput : MonoBehaviour
 {
-    private TMP_InputField cached_inputField;
-    private TMP_InputField InputField => cached_inputField ??= GetComponent<TMP_InputField>();
-    public event Action<String> Submit = Debug.Log;
+    [SerializeField] private TMP_InputField InputField;
+    public event Action<String> OnSubmitLine;
 
     void Start()
     {
@@ -16,7 +14,7 @@ public class ConsoleTextInput : MonoBehaviour
         InputField.onDeselect.AddListener(_ => InputField.ActivateInputField());
         InputField.onSubmit.AddListener(val =>
         {
-            Submit?.Invoke(val);
+            OnSubmitLine?.Invoke(val);
             InputField.SetTextWithoutNotify("");
             InputField.ActivateInputField();
         });
