@@ -1,12 +1,13 @@
-
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using PackageSystem;
 using UnityEngine;
 
-public class Room
+public class Room : IBinarySerializable
 {
-    private readonly IReadOnlyDictionary<Vector2Int, Tile> layout;
-    public (Vector2Int, Tile)[] Tiles => layout.Select(pair => (pair.Key, pair.Value)).ToArray();
+    private IReadOnlyDictionary<Vector2Int, Tile> Layout { get; set; }
+    public (Vector2Int, Tile)[] Tiles => Layout.Select(pair => (pair.Key, pair.Value)).ToArray();
 
     public Vector2Int MinCorner { get; private set; }
     public Vector2Int MaxCorner { get; private set; }
@@ -14,7 +15,30 @@ public class Room
     public int Height { get; private set; }
     public Vector2Int Size => new(Width, Height);
 
-    public Tile this[Vector2Int key] => layout.ContainsKey(key) ? layout[key] : Tile.VOID;
+    public byte[] ByteData
+    {
+        get
+        {
+            var stream = new MemoryStream();
+            stream.WriteVector2Int(MinCorner);
+            stream.WriteVector2Int(MaxCorner);
+            stream.WriteInt(Width);
+            stream.WriteInt(Height);
+            stream.WriteDictionary(Layout, stream.WriteVector2Int, stream.WriteEnum<Tile>);
+            return stream.GetAllBytes();
+        }
+        set
+        {
+            var stream = new MemoryStream(value);
+            MinCorner = stream.ReadVector2Int();
+            MaxCorner = stream.ReadVector2Int();
+            Width = stream.ReadInt();
+            Height = stream.ReadInt();
+            Layout = stream.ReadDictionary(stream.ReadVector2Int, stream.ReadEnum<Tile>);
+        }
+    }
+
+    public Tile this[Vector2Int key] => Layout.ContainsKey(key) ? Layout[key] : Tile.VOID;
 
     private static Dictionary<Vector2Int, Tile> LayoutDictFromString(string layout)
     {
@@ -38,10 +62,11 @@ public class Room
         }
         return layoutDict;
     }
+    public Room() { }
     public Room(string layout) : this(LayoutDictFromString(layout)) { }
     public Room(Dictionary<Vector2Int, Tile> layout)
     {
-        this.layout = layout;
+        this.Layout = layout;
         var min = new Vector2Int(int.MaxValue, int.MaxValue);
         var max = new Vector2Int(int.MinValue, int.MinValue);
         foreach (var key in layout.Keys)

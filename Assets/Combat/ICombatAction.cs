@@ -1,5 +1,7 @@
+using System;
+
 public interface ICombatAction
 {
-    void Apply(ref CombatState state);
+    void Apply(CombatState state, CombatLog log);
     bool IsValid(CombatState state);
 }

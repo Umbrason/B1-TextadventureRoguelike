@@ -1,10 +1,8 @@
-ABCDE
-FGHIJ
-KLMNO
-PQRST
-UVWXY
-Z╬╩╣╠
-╦╝╚║═
-╗╔╨╡╞
-╥·█☠🔥
- 
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+1234567890
+ .,:;!?_*
++-×÷><=
+(){}[]
+╬╩╣╠╦╝╚║═╗╔╨╡╞╥·█
+☠🔥

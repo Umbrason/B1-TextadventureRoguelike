@@ -11,7 +11,7 @@ public class CombatTest : MonoBehaviour
         var combatants = new Dictionary<Guid, ICombatActor>();
         var actor = new PlayableCombatActor() { Position = Vector2Int.one + Vector2Int.up };
         combatants.Add(actor.Guid, actor);
-        var combatState = new CombatState(new Room(roomLayout.text), combatants, new Dictionary<Vector2Int, ITileModifier>());
+        var combatState = new CombatState(new Room(roomLayout.text), combatants, new Dictionary<Vector2Int, ITileModifier>(), new(), null);        
         CombatManager.Instance.StartCombat(combatState);
     }
 }

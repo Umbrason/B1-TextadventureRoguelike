@@ -1,19 +1,27 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using PackageSystem;
 using UnityEngine;
 
-public interface ICombatActor : IReadOnlyCombatActor, ISkillUser, IBinarySerializable
+public interface ICombatActor : IBinarySerializable
 {
-    public void NotifyTurnStart(TurnInfo turnInfo);
-    public new Guid Guid { get; set; }
-    public new int Alignment { get; set; }
-    public ClampedInt Health { get; set; }
-    public int Initiative { get; }
-    public new Vector2Int Position { get; set; }
-    public IBinarySerializable State { get; }
+    public string Name { get; set; }
+    public Guid Guid { get; set; }
+    public int Alignment { get; set; }
+    public Vector2Int Position { get; set; }
 
-    byte[] IBinarySerializable.Bytes
+    #region Statblock
+    public ClampedInt Health { get; set; }
+    public ClampedInt ActionPoints { get; set; }
+    public ClampedInt MovementPoints { get; set; }
+    public int Initiative { get; }
+    #endregion
+
+    public List<ISkill> Skills { get; }
+    public List<IStatusEffect> StatusEffects { get; }
+
+    byte[] IBinarySerializable.ByteData
     {
         get
         {
@@ -31,11 +39,4 @@ public interface ICombatActor : IReadOnlyCombatActor, ISkillUser, IBinarySeriali
             Position = stream.ReadVector2Int();
         }
     }
-}
-
-public interface IReadOnlyCombatActor
-{
-    public Guid Guid { get; }
-    public int Alignment { get; }
-    public Vector2Int Position { get; }
 }

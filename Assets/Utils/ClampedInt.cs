@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public struct ClampedInt
+public class ClampedInt
 {
     public ClampedInt(int min, int max, int value)
     {
@@ -21,7 +21,7 @@ public struct ClampedInt
         => new ClampedInt(a.Min, a.Max, Mathf.Clamp(a.Value * b, a.Min, a.Max));
     public static ClampedInt operator /(ClampedInt a, int b)
         => new ClampedInt(a.Min, a.Max, Mathf.Clamp(a.Value / b, a.Min, a.Max));
-
+    
     public static bool operator ==(ClampedInt a, int b) => a.Value == b;
     public static bool operator !=(ClampedInt a, int b) => a.Value != b;
     public static bool operator >(ClampedInt a, int b) => a.Value > b;

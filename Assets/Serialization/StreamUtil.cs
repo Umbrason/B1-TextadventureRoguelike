@@ -142,14 +142,27 @@ namespace PackageSystem
         public static bool ReadBool(this Stream stream)
             => stream.ReadByte() > 0;
 
+
         public static void WriteIBinarySerializable(this Stream stream, IBinarySerializable serializable)
-            => stream.WriteEnumerable(serializable.Bytes, stream.WriteByte);
-        public static void ReadIBinarySerializable(this Stream stream, ref IBinarySerializable serializable)
-            => serializable.Bytes = stream.ReadEnumerable<byte>(() => (byte)stream.ReadByte());
+        {
+            stream.WriteString(serializable.GetType().Name);
+            stream.WriteIBinarySerializableData(serializable);
+        }
+        public static T ReadIBinarySerializable<T>(this Stream stream) where T : IBinarySerializable
+        {
+            var typeName = stream.ReadString();
+            return IBinarySerializableFactory<T>.Create(typeName, stream.ReadIBinarySerializableData());
+        }
+
+        public static void WriteIBinarySerializableData(this Stream stream, IBinarySerializable serializable)
+            => stream.WriteEnumerable(serializable.ByteData, stream.WriteByte);
+        public static byte[] ReadIBinarySerializableData(this Stream stream)
+            => stream.ReadEnumerable<byte>(() => (byte)stream.ReadByte());
 
         public static byte[] GetAllBytes(this Stream stream)
         {
             var bytes = new byte[stream.Length];
+            stream.Position = 0;
             stream.Read(bytes, 0, (int)stream.Length);
             stream.Close();
             return bytes;
