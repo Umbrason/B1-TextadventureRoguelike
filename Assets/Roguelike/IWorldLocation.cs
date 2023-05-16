@@ -1,0 +1,1 @@
+public interface IWorldLocation : IBinarySerializable { }

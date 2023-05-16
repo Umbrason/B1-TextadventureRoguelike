@@ -1,11 +1,30 @@
-using System;
+using System.IO;
 
-public interface IStatusEffect
+public interface IStatusEffect : IReadOnlyStatusEffect, IBinarySerializable
 {
-    int Duration { get; set; }
-    void OnApply(ICombatActor actor, CombatLog log);
-    void OnRemove(ICombatActor actor, CombatLog log);
-    void OnBeginTurn(ICombatActor actor, CombatLog log);
-    void OnMove(ICombatActor actor, CombatLog log);
-    void OnUseSkill(ICombatActor actor, CombatLog log);
+    public new int Duration { get; set; }
+    public void OnApply(ICombatActor actor, CombatState state);
+    public void OnRemove(ICombatActor actor, CombatState state);
+    public void OnBeginTurn(ICombatActor actor, CombatState state);
+    public void OnMove(ICombatActor actor, CombatState state);
+    public void OnUseSkill(ICombatActor actor, CombatState state);
+    byte[] IBinarySerializable.ByteData
+    {
+        get
+        {
+            var stream = new MemoryStream();
+            stream.WriteInt(Duration);
+            return stream.GetAllBytes();
+        }
+        set
+        {
+            var stream = new MemoryStream(value);
+            Duration = stream.ReadInt();
+        }
+    }
+}
+
+public interface IReadOnlyStatusEffect
+{
+    int Duration { get; }
 }

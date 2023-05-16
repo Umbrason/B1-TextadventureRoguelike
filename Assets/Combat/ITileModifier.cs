@@ -6,7 +6,7 @@ public interface ITileModifier : IBinarySerializable
     public char Char { get; }
     public bool BlocksMovement { get; }
     public bool BlocksLOS { get; }
-    public virtual void OnEnter(ICombatActor actor, CombatLog log) { }
-    public virtual void OnTurnBegin(ICombatActor actor, CombatLog log) { }
-    public virtual void OnExit(ICombatActor actor, CombatLog log) { }
+    public void OnEnter(ICombatActor user, CombatState combatState);
+    public void OnTurnBegin(ICombatActor user, CombatState combatState);
+    public void OnExit(ICombatActor user, CombatState combatState);
 }

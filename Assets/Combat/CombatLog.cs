@@ -3,30 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class CombatLog : IReadOnlyCombatLog
+public class CombatLog
 {
-    private readonly Stack<CombatState> stateStack = new();
-    public CombatState CurrentState => stateStack.Peek().DeepCopy();
-    public IEnumerable<CombatState> CombatStateHistory => stateStack;
-    public event Action<CombatState> OnStateChanged;
+    private readonly Stack<IReadOnlyCombatState> stateStack = new();
+    public IEnumerable<IReadOnlyCombatState> CombatStateHistory => stateStack;
+    public event Action<IReadOnlyCombatState> OnStateChanged;
+    public event Action<IReadOnlyCombatState> OnVisualUpdate;
+    public IReadOnlyCombatState LatestPersistentState => stateStack.Peek();
+
+    private CombatState CurrentState;
+    public IReadOnlyCombatState CurrentReadOnlyCombatState => CurrentState;
 
     public CombatLog(CombatState initialState)
     {
-        stateStack.Push(initialState);
+        CurrentState = initialState;
+        Persist();
     }
 
-    public bool TryPerformAction(ICombatAction action)
-    {
-        if (!action.IsValid(CurrentState)) return false;
-        action.Apply(CurrentState, this);
-        return true;
-    }
-
+    public void MoveActor(IReadOnlyCombatActor actor, Vector2Int targetLocation) => MoveActor(actor.Guid, targetLocation);
     public void MoveActor(Guid actorGuid, Vector2Int targetLocation)
     {
-        var state = CurrentState;
-        var Pathfinder = new Pathfinder(state.IsTileWalkable);
-        var actor = state.CombatActors[actorGuid];
+        var Pathfinder = new Pathfinder(CurrentState.IsTileWalkable);
+        var actor = CurrentState.CombatActors[actorGuid];
         var budget = actor.MovementPoints;
         var path = Pathfinder.FromTo(actor.Position, targetLocation);
 
@@ -34,25 +32,54 @@ public class CombatLog : IReadOnlyCombatLog
         if (path.Length > budget) ConsoleOutput.Println("Destination is too far!");
         if (path.Length == 0 || path.Length > budget) return;
 
-        if (state.TileModifiers.TryGetValue(targetLocation, out var modifier)) modifier.OnExit(actor, this);
-        actor.Position = targetLocation;
-        foreach (var statuseffect in actor.StatusEffects) statuseffect.OnMove(actor, this);
-        if (state.TileModifiers.TryGetValue(targetLocation, out modifier)) modifier.OnEnter(actor, this);
-
         for (int i = 0; i < path.Length; i++)
-            SubmitState(state.MoveActor(actorGuid, path[i]));
+        {
+            if (CurrentState.TileModifiers.TryGetValue(actor.Position, out var modifier)) modifier.OnExit(actor, CurrentState);
+            CurrentState.ActorPositions.Remove(actor.Position);
+            actor.Position = path[i];
+            actor.MovementPoints -= 1;
+            CurrentState.ActorPositions[actor.Position] = actor.Guid;
+            foreach (var statuseffect in actor.StatusEffects) statuseffect.OnMove(actor, CurrentState);
+            if (CurrentState.TileModifiers.TryGetValue(actor.Position, out modifier)) modifier.OnEnter(actor, CurrentState);
+            ConsoleOutput.Println($"Moved to {path[i].x} {path[i].y}");
+            if (CurrentState.ActiveActorStunned) { EndTurn(); return; }
+            RaiseVisualUpdate();
+        }
+        Persist();
+    }
+
+    public void CastSkill(IReadOnlyCombatActor user, IReadOnlySkill skill, object[] targets) => CastSkill(user.Guid, skill, targets);
+    public void CastSkill(Guid userGuid, IReadOnlySkill skill, ITargetSelector[] targets) => CastSkill(userGuid, skill, targets.Select(target => target.Value).ToArray());
+    public void CastSkill(IReadOnlyCombatActor user, IReadOnlySkill skill, ITargetSelector[] targets) => CastSkill(user.Guid, skill, targets.Select(target => target.Value).ToArray());
+    public void CastSkill(Guid userGuid, IReadOnlySkill skill, object[] targets)
+    {
+        var rwActor = CurrentState.CombatActors[userGuid];
+        var rwSkill = rwActor.Skills.First(s => s.GetType() == skill.GetType());
+        if (!rwSkill.CanUse(CurrentState, rwActor))
+        {
+            ConsoleOutput.Println($"Could not use {skill.GetType().Name}");
+            return;
+        }
+        ConsoleOutput.Println($"{rwActor.Name} used {rwSkill.GetType().Name}.");
+        rwSkill.Execute(CurrentState, rwActor, targets);
+        rwSkill.Cooldown.Value = rwSkill.Cooldown.Max;
+        Persist();
     }
 
     public void BeginNextTurn()
     {
         var nextGuid = CurrentState.TurnQueue.Dequeue();
+        CurrentState.ActiveActorGuid = nextGuid;
+        CurrentState.WithActiveActor(nextGuid);
         var actor = CurrentState.ActiveActor;
         var statusUpdateQueue = new Queue<IStatusEffect>(actor.StatusEffects);
         while (statusUpdateQueue.Count > 0)
         {
             var status = statusUpdateQueue.Dequeue();
-            status.OnBeginTurn(actor, this);
+            status.OnBeginTurn(actor, CurrentState);
         }
+        if (CurrentState.ActiveActorStunned) EndTurn();
+        else Persist();
     }
 
     public void EndTurn()
@@ -65,48 +92,51 @@ public class CombatLog : IReadOnlyCombatLog
             status.Duration--;
             if (status.Duration == 0)
             {
-                status.OnRemove(actor, this);
+                status.OnRemove(actor, CurrentState);
                 actor.StatusEffects.Remove(status);
-                SubmitState(CurrentState.WithModifiedActor(actor));
+                CurrentState.CombatActors[actor.Guid] = actor;
             }
         }
-        SubmitState(CurrentState.WithActiveActor(null));
+        CurrentState.ActiveActorStunned = false;
+        CurrentState.ActiveActorGuid = null;
+        Persist();
     }
 
-    public void SubmitState(CombatState state)
+    private void RaiseVisualUpdate()
     {
-        stateStack.Push(state.DeepCopy());
-        OnStateChanged?.Invoke(CurrentState);
+        var copy = CurrentState.DeepCopy();
+        OnVisualUpdate?.Invoke(copy);
     }
 
-    private void BuildTurnQueue()
+    private void Persist()
     {
-        var state = CurrentState;
-        var turnQueue = new Queue<Guid>();
-        var teamDict = new SortedList<int, SortedList<int, ICombatActor>>();
-        var actors = state.CombatActors;
+        stateStack.Push(CurrentState.DeepCopy());
+        OnVisualUpdate?.Invoke(LatestPersistentState);
+        OnStateChanged?.Invoke(LatestPersistentState);
+    }
+
+    public void BuildTurnQueue()
+    {
+        var teamDict = new SortedList<int, List<ICombatActor>>();
+        var actors = CurrentState.CombatActors;
         foreach (var actor in actors.Values)
         {
             var bucket = teamDict.ContainsKey(actor.Alignment) ? teamDict[actor.Alignment] : teamDict[actor.Alignment] = new();
-            bucket.Add(int.MaxValue - actor.Initiative, actor);
+            bucket.Add(actor);
+            teamDict[actor.Alignment] = bucket.OrderByDescending(actor => actor.Initiative).ToList();
         }
-        var alignments = teamDict.Keys.OrderBy(alignment => teamDict[alignment].Keys[0]).ToArray();
+        var alignments = teamDict.Keys.OrderBy(alignment => teamDict[alignment][0].Alignment).ToArray();
         int teamIndex = 0;
-        while (turnQueue.Count < actors.Count)
+        while (CurrentState.TurnQueue.Count < actors.Count)
         {
             var bucket = teamDict[alignments[teamIndex]];
             if (bucket.Count > 0)
             {
-                turnQueue.Enqueue(bucket.Values[bucket.Count - 1].Guid);
+                CurrentState.TurnQueue.Enqueue(bucket[bucket.Count - 1].Guid);
                 bucket.RemoveAt(bucket.Count - 1);
             }
             teamIndex = ++teamIndex % alignments.Length;
         }
-        SubmitState(state.WithTurnQueue(turnQueue));
+        Persist();
     }
-}
-public interface IReadOnlyCombatLog
-{
-    public IEnumerable<CombatState> CombatStateHistory { get; }
-    CombatState CurrentState { get; }
 }

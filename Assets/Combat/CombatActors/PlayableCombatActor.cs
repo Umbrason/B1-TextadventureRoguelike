@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class PlayableCombatActor : ICombatActor
 {
-    public string Name { get; set; }
-    public Guid Guid { get; set; }
-    public int Alignment { get; set; }
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public Vector2Int Position { get; set; }
-    public ClampedInt Health { get; set; }
-    public ClampedInt ActionPoints { get; set; } = new(0, 6, 6);
-    public ClampedInt MovementPoints { get; set; } = new(0, 10, 10);
-    public int Initiative { get; set; }
-    public List<ISkill> Skills { get; set; } = new();
     public List<IStatusEffect> StatusEffects { get; set; } = new();
-    public IBinarySerializable CustomState => null;    
+
+    public string Name { get; set; } = "Hero";
+    public int Alignment { get; set; } = 0;
+    public int Initiative { get; set; } = 10;
+    public ClampedInt Armor { get; set; } = new(0, 0, 0);
+    public ClampedInt Health { get; set; } = new(0, 10, 10);
+    public ClampedInt ActionPoints { get; set; } = new(0, 5, 5);
+    public ClampedInt MovementPoints { get; set; } = new(0, 5, 5);
+    public List<ISkill> Skills { get; set; } = new() { new Fireball() };
 }
