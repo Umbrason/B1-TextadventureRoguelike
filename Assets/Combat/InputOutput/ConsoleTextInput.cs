@@ -3,10 +3,39 @@ using System;
 using TMPro;
 using UnityEngine;
 
-public class ConsoleTextInput : MonoBehaviour
+public class ConsoleTextInput : SingletonBehaviour<ConsoleTextInput>
 {
     [SerializeField] private TMP_InputField InputField;
-    public event Action<String> OnSubmitLine;
+    public static event Action<String> OnSubmitLine;
+
+
+    public void ForceText(string text)
+    {
+        _prevText = InputField.text;
+        InputField.SetTextWithoutNotify(text);
+        InputField.interactable = false;
+    }
+    private string _prevText;
+    public void StopForcingText()
+    {
+        InputField.SetTextWithoutNotify(_prevText);
+        InputField.interactable = true;
+        InputField.ActivateInputField();
+    }
+
+    public void SubmitLine(string line) => SubmitLine(line, true);
+    public void SubmitLine(string line, bool clearsInput = true)
+    {
+        line = line.Trim(' ');
+        ConsoleOutput.Println($">{line}");
+        if (clearsInput)
+        {
+            InputField.SetTextWithoutNotify("");
+            InputField.ActivateInputField();
+            StopForcingText();
+        }
+        OnSubmitLine?.Invoke(line);
+    }
 
     void Start()
     {
@@ -14,14 +43,7 @@ public class ConsoleTextInput : MonoBehaviour
         InputField.onDeselect.AddListener(_ => InputField.ActivateInputField());
         InputField.characterValidation = TMP_InputField.CharacterValidation.CustomValidator;
         InputField.inputValidator = ScriptableObject.CreateInstance<CustomValidator>();
-        InputField.onSubmit.AddListener(val =>
-        {
-            val = val.Trim(' ');
-            ConsoleOutput.Println($">{val}");
-            InputField.SetTextWithoutNotify("");
-            InputField.ActivateInputField();
-            OnSubmitLine?.Invoke(val);
-        });
+        InputField.onSubmit.AddListener(SubmitLine);
     }
 
     private class CustomValidator : TMP_InputValidator

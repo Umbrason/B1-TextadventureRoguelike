@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
 using UnityEngine;
 
-[RequireComponent(typeof(ConsoleTextInput))]
 public class PlayerCombatActorController : MonoBehaviour
-{
-    private ConsoleTextInput cached_ConsoleTextInput;
-    private ConsoleTextInput ConsoleTextInput => cached_ConsoleTextInput ??= GetComponent<ConsoleTextInput>();
-
+{    
     void Awake()
     {
         ConsoleTextInput.OnSubmitLine += ParseInput;
+    }
+
+    void OnDestroy()
+    {
+        ConsoleTextInput.OnSubmitLine -= ParseInput;
     }
 
     private class OPCode
@@ -36,7 +36,7 @@ public class PlayerCombatActorController : MonoBehaviour
     private ICommandParser parser;
     private void ParseInput(string input)
     {
-        var combatLog = CombatManager.Instance.CombatLog;
+        var combatLog = CombatManager.CombatLog;
         var activeActor = combatLog.CurrentReadOnlyCombatState.ActiveActor;
         if (activeActor == null || activeActor.Alignment != 0) return;
         var keywords = new Queue<string>(input.Split(' '));

@@ -1,17 +1,17 @@
 
 using System;
 
-public class CombatManager : SingletonBehaviour<CombatManager>
+public static class CombatManager
 {
-    public CombatLog CombatLog { get; private set; }
-    public event Action<IReadOnlyCombatState> OnCombatStateChanged;
-    public event Action<IReadOnlyCombatState> OnVisualUpdate;
+    public static CombatLog CombatLog { get; private set; }
+    public static event Action<IReadOnlyCombatState> OnCombatStateChanged;
+    public static event Action<IReadOnlyCombatState> OnVisualUpdate;
     
-    public void StartCombat(CombatState state)
+    public static void StartCombat(CombatState state)
     {
-        this.CombatLog = new CombatLog(state);
-        CombatLog.OnStateChanged += (state) => this.OnCombatStateChanged?.Invoke(state);
-        CombatLog.OnVisualUpdate += (state) => this.OnVisualUpdate?.Invoke(state);
+        CombatLog = new CombatLog(state);
+        CombatLog.OnStateChanged += (state) => OnCombatStateChanged?.Invoke(state);
+        CombatLog.OnVisualUpdate += (state) => OnVisualUpdate?.Invoke(state);
 
         CombatLog.BuildTurnQueue();
         CombatLog.BeginNextTurn();

@@ -72,6 +72,9 @@ public class CombatLog
         CurrentState.ActiveActorGuid = nextGuid;
         CurrentState.WithActiveActor(nextGuid);
         var actor = CurrentState.ActiveActor;
+        actor.Armor.Value = actor.Armor.Max;
+        actor.ActionPoints.Value = actor.ActionPoints.Max;
+        actor.MovementPoints.Value = actor.MovementPoints.Max;
         var statusUpdateQueue = new Queue<IStatusEffect>(actor.StatusEffects);
         while (statusUpdateQueue.Count > 0)
         {

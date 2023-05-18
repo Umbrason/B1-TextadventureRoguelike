@@ -18,7 +18,12 @@ public class Cursor : MonoBehaviour
     private RoomInfo room;
     void Start()
     {
-        CombatManager.Instance.OnCombatStateChanged += (state) => room = state.Room;
+        CombatManager.OnCombatStateChanged += (state) => room = state.Room;
+    }
+
+    void OnDestroy()
+    {
+        CombatManager.OnCombatStateChanged -= (state) => room = state.Room;
     }
 
     void Update()

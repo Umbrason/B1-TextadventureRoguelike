@@ -1,15 +1,21 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 
-public class Worldmap : IBinarySerializable
+public class Worldmap : IBinarySerializable, IReadOnlyWorldMap
 {
-    private IWorldLocation[][] mapLocations;
-    private int[][][] connections;
+    public IWorldLocation[][] MapLocations { get; private set; }
+    public int[][][] Connections { get; private set; }
+    public int Seed { get; private set; }
+
+    public IReadOnlyCollection<IReadOnlyCollection<IReadOnlyWorldLocation>> ReadOnlyMapLocations => MapLocations;
+    IReadOnlyCollection<IReadOnlyCollection<IReadOnlyCollection<int>>> IReadOnlyWorldMap.ReadOnlyMapConnections => Connections;
 
     private Worldmap(IWorldLocation[][] locations, int[][][] connections)
     {
-        this.mapLocations = locations;
-        this.connections = connections;
+        this.MapLocations = locations;
+        this.Connections = connections;
     }
 
     public byte[] ByteData
@@ -17,23 +23,81 @@ public class Worldmap : IBinarySerializable
         get
         {
             var stream = new MemoryStream();
-            stream.WriteEnumerable(mapLocations, (array) => stream.WriteEnumerable(array, stream.WriteIBinarySerializable));
-            stream.WriteEnumerable(connections, (array) => stream.WriteEnumerable(array, (intarray) => stream.WriteEnumerable(intarray, stream.WriteInt)));
+            stream.WriteEnumerable(MapLocations, (array) => stream.WriteEnumerable(array, stream.WriteIBinarySerializable));
+            stream.WriteEnumerable(Connections, (array) => stream.WriteEnumerable(array, (intarray) => stream.WriteEnumerable(intarray, stream.WriteInt)));
+            stream.WriteInt(Seed);
             return stream.GetAllBytes();
         }
 
         set
         {
             var stream = new MemoryStream(value);
-            mapLocations = stream.ReadEnumerable<IWorldLocation[]>(() => stream.ReadEnumerable<IWorldLocation>(stream.ReadIBinarySerializable<IWorldLocation>));
-            connections = stream.ReadEnumerable<int[][]>(() => stream.ReadEnumerable<int[]>(() => stream.ReadEnumerable<int>(stream.ReadInt)));
+            MapLocations = stream.ReadEnumerable<IWorldLocation[]>(() => stream.ReadEnumerable<IWorldLocation>(stream.ReadIBinarySerializable<IWorldLocation>));
+            Connections = stream.ReadEnumerable<int[][]>(() => stream.ReadEnumerable<int[]>(() => stream.ReadEnumerable<int>(stream.ReadInt)));
+            Seed = stream.ReadInt();
         }
     }
 
+
     private IWorldLocation[] getConnectedLocations(int depth, int index)
     {
-        var nextDepth = mapLocations[depth + 1];
-        var connectedIndices = connections[depth][index];
+        var nextDepth = MapLocations[depth + 1];
+        var connectedIndices = Connections[depth][index];
         return connectedIndices.Select((i) => nextDepth[i]).ToArray();
     }
+
+    const int forcedBattles = 5;
+    const int fillerLocations = 2;
+
+
+    static readonly float[] layerExpansionWeights = new float[] {
+   .5f,.5f,.5f,.5f,
+    0f, 0f, 0f,
+    2f, 2f, 2f, 2f, 2f, 2f, 2f, 2f };
+
+    public static Worldmap Generate(int seed)
+    {
+        var mapLocationList = new List<IWorldLocation[]>();
+        var mapConnectionList = new List<int[][]>();
+        Random.InitState(seed);
+        mapLocationList.Add(GenerateLocations(1));
+        for (int i = 0; i < forcedBattles; i++)
+            for (int j = 0; j < fillerLocations + 1; j++)
+            {
+                var currentLayer = mapLocationList.Last();
+                var nextLayerCount = Mathf.Clamp(Mathf.RoundToInt(currentLayer.Length * (layerExpansionWeights[Random.Range(0, layerExpansionWeights.Length)])), 1, 8);
+                if (i < 1 && nextLayerCount == 1) nextLayerCount = 2;
+                var nextLayer = GenerateLocations(nextLayerCount, j == 0); //force battles on first iteration of inner loop
+                mapLocationList.Add(nextLayer);
+                var connections = new int[currentLayer.Length][];
+                for (int c = 0; c < connections.Length; c++)
+                {
+                    var indices = new int[Mathf.Max(1, nextLayerCount / currentLayer.Length)]; //length = size ratio from this to next layer
+                    for (int ci = 0; ci < indices.Length; ci++)
+                        indices[ci] = Mathf.FloorToInt(c * (nextLayerCount / (float)currentLayer.Length)) + ci;
+                    connections[c] = indices;
+                }
+                mapConnectionList.Add(connections);
+            }
+
+        //add boss location
+        mapConnectionList.Add(mapLocationList.Last().Select(l => new int[1]).ToArray());
+        mapLocationList.Add(new IWorldLocation[] { Locations.GoblinAmbush }); //bossLocation
+
+        return new(mapLocationList.ToArray(), mapConnectionList.ToArray());
+    }
+    private static IWorldLocation[] GenerateLocations(int count, bool forceBattle = false)
+    {
+        var locations = new CombatLocation[count];
+        for (int i = 0; i < count; i++) locations[i] = Locations.GoblinAmbush;
+        return locations;
+    }
+
+}
+
+public interface IReadOnlyWorldMap
+{
+    IReadOnlyCollection<IReadOnlyCollection<IReadOnlyWorldLocation>> ReadOnlyMapLocations { get; }
+    IReadOnlyCollection<IReadOnlyCollection<IReadOnlyCollection<int>>> ReadOnlyMapConnections { get; }
+    public int Seed { get; }
 }

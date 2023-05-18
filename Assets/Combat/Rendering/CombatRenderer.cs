@@ -16,7 +16,13 @@ public class CombatRenderer : MonoBehaviour
         renderPipeline.AddPass(new RoomRenderPass());
         renderPipeline.AddPass(new TileModifierRenderPass());
         renderPipeline.AddPass(new CombatActorRenderPass());
-        CombatManager.Instance.OnVisualUpdate += stateUpdateQueue.Enqueue;
+        CombatManager.OnVisualUpdate += stateUpdateQueue.Enqueue;
+        if (CombatManager.CombatLog != null) stateUpdateQueue.Enqueue(CombatManager.CombatLog.CurrentReadOnlyCombatState);
+    }
+
+    void OnDestroy()
+    {
+        CombatManager.OnVisualUpdate -= stateUpdateQueue.Enqueue;
     }
 
     private const float DRAWRATE = 5f;

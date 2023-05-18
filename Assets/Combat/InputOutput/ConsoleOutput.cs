@@ -11,7 +11,7 @@ public class ConsoleOutput : SingletonBehaviour<ConsoleOutput>
     {
         history.Add(text);
         Instance?.UpdateDisplay();
-    }    
+    }
 
     private void UpdateDisplay()
     {
