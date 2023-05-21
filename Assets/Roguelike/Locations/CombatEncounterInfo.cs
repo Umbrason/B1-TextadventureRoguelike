@@ -4,18 +4,16 @@ using UnityEngine;
 
 public class CombatEncounterInfo : IBinarySerializable
 {
-    public CombatEncounterInfo(RoomInfo room, ICombatActor[] enemies, Vector2Int[] allyStartPositions, Dictionary<Vector2Int, ITileModifier> tileModifiers)
+    public CombatEncounterInfo(RoomInfo room, ICombatActor[] enemies, Vector2Int[] allyStartPositions)
     {
         this.room = room;
         this.enemies = enemies;
-        this.allyStartPositions = allyStartPositions;
-        this.tileModifiers = tileModifiers;
+        this.allyStartPositions = allyStartPositions;    
     }
 
     public ICombatActor[] enemies;
     public RoomInfo room;
-    public Vector2Int[] allyStartPositions;
-    public Dictionary<Vector2Int, ITileModifier> tileModifiers;
+    public Vector2Int[] allyStartPositions;    
 
     public byte[] ByteData
     {
@@ -24,8 +22,7 @@ public class CombatEncounterInfo : IBinarySerializable
             var stream = new MemoryStream();
             stream.WriteEnumerable(enemies, stream.WriteIBinarySerializable);
             stream.WriteIBinarySerializable(room);
-            stream.WriteEnumerable(allyStartPositions, stream.WriteVector2Int);
-            stream.WriteDictionary(tileModifiers, stream.WriteVector2Int, stream.WriteIBinarySerializable);
+            stream.WriteEnumerable(allyStartPositions, stream.WriteVector2Int);            
             return stream.GetAllBytes();
         }
         set
@@ -34,7 +31,6 @@ public class CombatEncounterInfo : IBinarySerializable
             enemies = stream.ReadEnumerable(stream.ReadIBinarySerializable<ICombatActor>);
             room = stream.ReadIBinarySerializable<RoomInfo>();
             allyStartPositions = stream.ReadEnumerable(stream.ReadVector2Int);
-            tileModifiers = stream.ReadDictionary(stream.ReadVector2Int, stream.ReadIBinarySerializable<ITileModifier>);
         }
     }
 }

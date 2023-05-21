@@ -1,41 +1,27 @@
-using System.IO;
+using System.Linq;
 using UnityEngine;
 
-public class CombatLocation : IWorldLocation
+public abstract class CombatLocation : IWorldLocation
 {
-    public CombatLocation(LocationData locationData, CombatEncounterInfo encounterInfo)
+    public abstract string Name { get; }
+    public virtual string LocationImage { get => Name; }
+    private CombatEncounterInfoData cached_data;
+    private CombatEncounterInfoData data => cached_data ??= Resources.Load<CombatEncounterInfoData>($"CombatEncounters/{Name}");
+    private CombatEncounterInfo cached_EncounterInfo;
+    public CombatEncounterInfo EncounterInfo => cached_EncounterInfo ??= GenerateEncounterInfo();
+    private CombatEncounterInfo GenerateEncounterInfo()
     {
-        
-        this.Name = locationData.name;
-        this.Image = locationData.Sprite;
-        this.storyText = locationData.StoryText;
-        this.optionTexts = new string[] { "Fight!" };
-        this.EncounterInfo = encounterInfo;
+        var enemies = data.EnemyTypes.Select(enemy => IBinarySerializableFactory<ICombatActor>.CreateDefault(enemy)).ToArray();
+        for (int i = 0; i < enemies.Length; i++) enemies[i].Position = data.EnemyStartPositions[i];
+        return new CombatEncounterInfo(new RoomInfo(data.roomLayoutFile.text), enemies, data.AllyStartPositions);
     }
 
-    public string Name { get; private set; }
-    public CombatEncounterInfo EncounterInfo { get; private set; }
     byte[] IBinarySerializable.ByteData
     {
-        get
-        {
-            var stream = new MemoryStream();
-            stream.WriteIBinarySerializable(EncounterInfo);
-            stream.WriteString(Name);
-            return stream.GetAllBytes();
-        }
-        set
-        {
-            var stream = new MemoryStream(value);
-            EncounterInfo = stream.ReadIBinarySerializable<CombatEncounterInfo>();
-            Name = stream.ReadString();
-        }
+        get => new byte[0];
+        set { }
     }
-    public Sprite Image { get; private set; }
-    public string storyText { get; private set; } = "";
-    public string[] optionTexts { get; private set; } = new string[0];
-    public void OnPickOption(int option)
-    {
-        RunManager.StartCombat(EncounterInfo);
-    }
+    public abstract string storyText { get; }
+    public string[] optionTexts => new string[] { "Fight" };
+    public void OnPickOption(int option, RunInfo run) => RunManager.StartCombat(EncounterInfo);
 }

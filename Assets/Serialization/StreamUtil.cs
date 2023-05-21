@@ -145,10 +145,10 @@ public static class StreamUtil
     #endregion
 
     public static void WriteEnum<T>(this Stream stream, T value) where T : System.Enum
-        => stream.WriteString(value.ToString());
+        => stream.WriteInt((int)(object)value);
 
     public static T ReadEnum<T>(this Stream stream) where T : System.Enum
-        => (T)Enum.Parse(typeof(T), stream.ReadString());
+        => (T)(object)stream.ReadInt();
 
     public static void WriteBool(this Stream stream, bool value)
         => stream.WriteByte((byte)(value ? 1 : 0));

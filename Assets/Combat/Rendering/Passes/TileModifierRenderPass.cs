@@ -6,7 +6,7 @@ public class TileModifierRenderPass : CombatRenderPipeline.IRenderPass
     {
         var tileModifierBuffer = new CombatRenderPipeline.CharBuffer(data.ScreenBuffer.Width, data.ScreenBuffer.Height);        
         var roomMinCorner = data.CombatState.Room.MinCorner;
-        foreach(var tileModifier in data.CombatState.TileModifiers)
+        foreach(var tileModifier in data.CombatState.Room.TileModifiers)
         {
             var pos = tileModifier.Key;
             var screenPos = pos - roomMinCorner;

@@ -8,6 +8,9 @@ public class PartyInfo : IBinarySerializable, IReadOnlyPartyInfo
     public List<PlayableCombatActor> PartyMembers { get; private set; } = new();
     public ICombatActor[] CombatActors => PartyMembers.Prepend(PartyLeader).ToArray();
 
+    IReadOnlyCombatActor IReadOnlyPartyInfo.PartyLeader => this.PartyLeader;
+    IReadOnlyCollection<IReadOnlyCombatActor> IReadOnlyPartyInfo.PartyMembers => this.PartyMembers;
+
     public static PartyInfo Empty => new();
 
     public byte[] ByteData
@@ -26,9 +29,11 @@ public class PartyInfo : IBinarySerializable, IReadOnlyPartyInfo
             PartyMembers = stream.ReadEnumerable(stream.ReadIBinarySerializable<PlayableCombatActor>).ToList();
         }
     }
+
 }
 
 public interface IReadOnlyPartyInfo
 {
-
+    public IReadOnlyCombatActor PartyLeader { get; }
+    public IReadOnlyCollection<IReadOnlyCombatActor> PartyMembers { get; }    
 }

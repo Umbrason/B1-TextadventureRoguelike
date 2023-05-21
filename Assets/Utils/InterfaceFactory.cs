@@ -32,12 +32,18 @@ public static class IBinarySerializableFactory<T> where T : IBinarySerializable
 
     }
 
-    public static T Create(string name, byte[] byteData)
+    public static T CreateDefault(string name)
     {
         if (!Types.ContainsKey(name.ToLower())) return default;
         var type = Types[name.ToLower()];
         var instance = (T)Activator.CreateInstance(type);
-        instance.ByteData = byteData;
+        return instance;
+    }
+
+    public static T Create(string name, byte[] byteData)
+    {
+        var instance = CreateDefault(name);
+        if (instance != null) instance.ByteData = byteData;
         return instance;
     }
 }

@@ -1,0 +1,42 @@
+ WWW                         WWWWWWW         
+ WFFFFFFFF                  WWFFFFFFFFFFFFFF 
+WWFFFFFFFF                 WWFFFFFFFFFFFFFFF 
+WFFFFFFFFFFFFFFFFFFF       WFFFFFFFFFFFFFFFFW
+WFFFFFFFFFFFFFFFFFF         FFFFFFFFFFFFFFFWW
+ FFFFFFFFFFFFFFFFFFFFF     FFFFFFFFFFFFFFFWW 
+ FFFFFFFFFFFFFFFFF   FFFFFFFFFFFFFFFFFFFFFFF 
+ FFFFFFFFFFFFFFFF         FFFFFFFFFFFFFFFFFF 
+FFFFFFFFFFFFFFFFF         FFFFFFFFFFFFFFFFF  
+FFFFFFFFFFFFFFFF         WFFFFFFFFFFFFFFFFFFF
+FFFFFFFFFFFFFWW          WWFFFFFFFFFFFFFFFFF 
+FFFFFFFFFFFFWW            WWW FFFFFFFFFFFFFF 
+FFFFFFFWWWWWW                  FFFFFFFFFFFF  
+ FFFFFF                          F FFFFFFF   
+  FFFFF                        FFF           
+      FF                      FF             
+       F                     FF              
+       FF FFFFFFFF         FFF               
+        F FFFFFFFFFF       F                 
+       FFFFFFFFFFFFFFFFFF  F                 
+       FFFFFFFFFFFFFFFFFFFFFFFF              
+      FFFFFFFFFFFFFFFFFFFFFFFFF              
+      FFFFFFFFFFFFFFFFFFFFFFFFF              
+      FFFFFFFFFFFFFFFFFFFFFFFFF              
+      FFFFFFFFFWWWWFFFFFFFFFFFFWW            
+      FFFFFFFFWW  WWFFFFFFFFFFFFW            
+     WFFFFFFFFW    WFFFFFFFFFFFFW            
+     WFFFFFFFFW    WFFFFFFFFFFFFW            
+     WWFFFFFFFW   WWFFFFFFFFFFFFW            
+      WFFFFFFFWWWWWFFFFFFFFFFFFF             
+       FFFFFFFFFFFFFFFFFFFFFFFFF             
+       FFFFFFFFFFFFFFFFFFFFFFFFF             
+       FFFFFFFFFFFFFFFFFFFFFFF               
+       FFFFFFFFFFFFFFFFFFFFFFF               
+        FFFFFFFFFFFFFFFFFFFFFF               
+        WFFFFFFFFFFFFFFFFFFFF                
+        WWWWWFFFFFFFFFFFFFFFF                
+            WFFFFFFFFFFFFFFFF                
+            WFFFFFFFFF                       
+              FFFFFFFFW                      
+              FFFFFFFWW                      
+                WWWWWW                       

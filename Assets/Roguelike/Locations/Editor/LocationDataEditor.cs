@@ -1,6 +1,7 @@
 using UnityEditor;
-using UnityEngine;
 using UnityEditorInternal;
+using UnityEngine;
+
 
 [CustomEditor(typeof(LocationData))]
 public class LocationDataEditor : Editor

@@ -31,11 +31,14 @@ public class ClampedInt : IReadOnlyClampedInt
     public static implicit operator int(ClampedInt clampedInt) => clampedInt.Value;
     public override bool Equals(object obj) => Value.Equals(obj);
     public override int GetHashCode() => Value.GetHashCode();
+    public override string ToString()
+    {
+        return $"{this.Value}/{this.Max}";
+    }
 }
 public interface IReadOnlyClampedInt
 {
     public int Value { get; }
     public int Min { get; }
     public int Max { get; }
-
 }

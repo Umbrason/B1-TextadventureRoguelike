@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 public class CombatRenderPipeline
@@ -48,18 +49,55 @@ public class CombatRenderPipeline
                 }
         }
 
-        //huge unoptimized bottleneck still runs in 4ms
+        //huge unoptimized bottleneck still runs in 4ms        
+
         public override string ToString()
         {
-            var screenText = "";
+            var stringBuilder = new StringBuilder(this.Width * this.Height * 24 + this.Height);
             for (int j = Height - 1; j >= 0; j--)
             {
                 for (int i = 0; i < Width; i++)
-                    screenText += $"<color=#{UnityEngine.ColorUtility.ToHtmlStringRGB(colors[i, j])}>{(chars[i, j] != default ? chars[i, j] : " ")}</color>";
-                screenText += "\n";
+                {
+                    var color = (Color32)colors[i, j];
+                    stringBuilder.Append("<color=#");
+                    stringBuilder.Append(hex(color.r >> 4));
+                    stringBuilder.Append(hex(color.r & 15));
+                    stringBuilder.Append(hex(color.g >> 4));
+                    stringBuilder.Append(hex(color.g & 15));
+                    stringBuilder.Append(hex(color.b >> 4));
+                    stringBuilder.Append(hex(color.b & 15));
+                    stringBuilder.Append('>');
+                    stringBuilder.Append((chars[i, j] != default ? chars[i, j] : ' '));
+                    stringBuilder.Append("</color>");
+                }
+                stringBuilder.Append('\n');
             }
-            return screenText;
+            return stringBuilder.ToString();
         }
+    }
+
+    private static char hex(int number)
+    {
+        return number switch
+        {
+            0 => '0',
+            1 => '1',
+            2 => '2',
+            3 => '3',
+            4 => '4',
+            5 => '5',
+            6 => '6',
+            7 => '7',
+            8 => '8',
+            9 => '9',
+            10 => 'A',
+            11 => 'B',
+            12 => 'C',
+            13 => 'D',
+            14 => 'E',
+            15 => 'F',
+            _ => '0'
+        };
     }
 
     private readonly SortedList<int, IRenderPass> passes = new();
@@ -102,3 +140,4 @@ public class CombatRenderPipeline
         public void Execute(RenderingData data);
     }
 }
+

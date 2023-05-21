@@ -10,7 +10,4 @@ public class Crippled : IStatusEffect
     {
         actor.MovementPoints.Value = 0;
     }
-    public void OnMove(ICombatActor actor, CombatState state) { }
-    public void OnRemove(ICombatActor actor, CombatState state) { }
-    public void OnUseSkill(ICombatActor actor, CombatState state) { }
 }

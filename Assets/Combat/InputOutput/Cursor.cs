@@ -14,27 +14,33 @@ public class Cursor : MonoBehaviour
     [SerializeField] private Sprite[] Images;
     [SerializeField] private float animationFrequency = 2f;
     [SerializeField] private TMP_Text coordinateText;
+    [SerializeField] private TMP_Text backgroundText;
 
-    private RoomInfo room;
+    private IReadOnlyRoomInfo room;
     void Start()
     {
         CombatManager.OnCombatStateChanged += (state) => room = state.Room;
+        room = CombatManager.CombatLog?.CurrentReadOnlyCombatState?.Room;
     }
 
     void OnDestroy()
     {
         CombatManager.OnCombatStateChanged -= (state) => room = state.Room;
+        UnityEngine.Cursor.visible = true;
     }
 
-    void Update()
+    void LateUpdate()
     {
-        if (!(coordinateText.enabled = Renderer.enabled = (room != null))) return; //disable cursor and return if room is null
+        if(Mouse.current.middleButton.isPressed) return; //fix cursor flicker
+        if (!(backgroundText.enabled = coordinateText.enabled = Renderer.enabled = (room != null))) return; //disable cursor and return if room is null
         var cursorWorldPosition = Vector2Int.RoundToInt(MainCamera.ScreenToWorldPoint(Pointer.current.position.ReadValue()));
         transform.position = (Vector2)cursorWorldPosition;
         var cursorRoomPosition = cursorWorldPosition + room.Size / 2 + room.MinCorner;
         var tileType = room[cursorRoomPosition];
-        if (UnityEngine.Cursor.visible = !(coordinateText.enabled = Renderer.enabled = (tileType == RoomInfo.Tile.FLOOR))) return; //disable if not hovering over floor tile
+        if (UnityEngine.Cursor.visible = !(backgroundText.enabled = coordinateText.enabled = Renderer.enabled = (tileType == RoomInfo.Tile.FLOOR))) return; //disable if not hovering over floor tile
         if (Images.Length > 0) Renderer.sprite = Images[Mathf.FloorToInt(Time.time * animationFrequency) % Images.Length];
-        if(coordinateText != null) coordinateText.text = $"<mark=#000000aa>x:{cursorRoomPosition.x} y:{cursorRoomPosition.y}";
+        var positionText = $"x:{cursorRoomPosition.x} y:{cursorRoomPosition.y}";
+        if (coordinateText != null) coordinateText.text = positionText;
+        if (backgroundText != null) backgroundText.text = $"<mark=#000000af>{positionText}</mark>";
     }
 }

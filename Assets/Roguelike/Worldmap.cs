@@ -49,7 +49,6 @@ public class Worldmap : IBinarySerializable, IReadOnlyWorldMap
     const int forcedBattles = 5;
     const int fillerLocations = 2;
 
-
     static readonly float[] layerExpansionWeights = new float[] {
    .5f,.5f,.5f,.5f,
     0f, 0f, 0f,
@@ -60,14 +59,16 @@ public class Worldmap : IBinarySerializable, IReadOnlyWorldMap
         var mapLocationList = new List<IWorldLocation[]>();
         var mapConnectionList = new List<int[][]>();
         Random.InitState(seed);
-        mapLocationList.Add(GenerateLocations(1));
+        mapLocationList.Add(GenerateLocations(1, Locations.FillerLocations));
         for (int i = 0; i < forcedBattles; i++)
+        {
+            var combatPool = i < forcedBattles / 2 + Random.Range(-2, 2) ? Locations.CombatLocations : Locations.EliteCombatLocations;
             for (int j = 0; j < fillerLocations + 1; j++)
             {
                 var currentLayer = mapLocationList.Last();
                 var nextLayerCount = Mathf.Clamp(Mathf.RoundToInt(currentLayer.Length * (layerExpansionWeights[Random.Range(0, layerExpansionWeights.Length)])), 1, 8);
                 if (i < 1 && nextLayerCount == 1) nextLayerCount = 2;
-                var nextLayer = GenerateLocations(nextLayerCount, j == 0); //force battles on first iteration of inner loop
+                var nextLayer = GenerateLocations(nextLayerCount, j == 0 ? combatPool : Locations.FillerLocations); //force battles on first iteration of inner loop
                 mapLocationList.Add(nextLayer);
                 var connections = new int[currentLayer.Length][];
                 for (int c = 0; c < connections.Length; c++)
@@ -79,17 +80,19 @@ public class Worldmap : IBinarySerializable, IReadOnlyWorldMap
                 }
                 mapConnectionList.Add(connections);
             }
+        }
 
         //add boss location
         mapConnectionList.Add(mapLocationList.Last().Select(l => new int[1]).ToArray());
-        mapLocationList.Add(new IWorldLocation[] { Locations.GoblinAmbush }); //bossLocation
+        mapLocationList.Add(new IWorldLocation[] { Locations.BossCombatLocations.RandomElement() }); //bossLocation
 
         return new(mapLocationList.ToArray(), mapConnectionList.ToArray());
     }
-    private static IWorldLocation[] GenerateLocations(int count, bool forceBattle = false)
+
+    private static IWorldLocation[] GenerateLocations(int count, IWorldLocation[] pool)
     {
-        var locations = new CombatLocation[count];
-        for (int i = 0; i < count; i++) locations[i] = Locations.GoblinAmbush;
+        var locations = new IWorldLocation[count];
+        for (int i = 0; i < count; i++) locations[i] = pool.RandomElement();
         return locations;
     }
 

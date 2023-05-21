@@ -19,6 +19,7 @@ public interface ICombatActor : IReadOnlyCombatActor, IBinarySerializable
     public new ClampedInt Health { get; set; }
     public new ClampedInt ActionPoints { get; set; }
     public new ClampedInt MovementPoints { get; set; }
+    public int StunSources { get; set; }
     public new List<ISkill> Skills { get; set; }
     #endregion
 
@@ -38,6 +39,7 @@ public interface ICombatActor : IReadOnlyCombatActor, IBinarySerializable
             stream.WriteClampedInt(Health);
             stream.WriteClampedInt(ActionPoints);
             stream.WriteClampedInt(MovementPoints);
+            stream.WriteInt(StunSources);
             stream.WriteEnumerable(Skills, stream.WriteIBinarySerializable);
             return stream.GetAllBytes();
         }
@@ -54,6 +56,7 @@ public interface ICombatActor : IReadOnlyCombatActor, IBinarySerializable
             Health = stream.ReadClampedInt();
             ActionPoints = stream.ReadClampedInt();
             MovementPoints = stream.ReadClampedInt();
+            StunSources = stream.ReadInt();
             Skills = stream.ReadEnumerable(stream.ReadIBinarySerializable<ISkill>).ToList();
         }
     }
@@ -64,6 +67,7 @@ public interface ICombatActor : IReadOnlyCombatActor, IBinarySerializable
     IReadOnlyClampedInt IReadOnlyCombatActor.MovementPoints => MovementPoints;
     IReadOnlyList<IReadOnlySkill> IReadOnlyCombatActor.Skills => Skills;
     IReadOnlyList<IReadOnlyStatusEffect> IReadOnlyCombatActor.StatusEffects => StatusEffects;
+    bool IReadOnlyCombatActor.Stunned => StunSources > 0;
 }
 
 public interface IReadOnlyCombatActor
@@ -73,12 +77,18 @@ public interface IReadOnlyCombatActor
     public int Alignment { get; }
     public Vector2Int Position { get; }
 
+    #region Visuals
+    public Color Color { get; }
+    public char Character { get; }
+    #endregion
+
     #region Statblock
     public IReadOnlyClampedInt Armor { get; }
     public IReadOnlyClampedInt Health { get; }
     public IReadOnlyClampedInt ActionPoints { get; }
     public IReadOnlyClampedInt MovementPoints { get; }
     public int Initiative { get; }
+    public bool Stunned { get; }
     #endregion
 
     public IReadOnlyList<IReadOnlySkill> Skills { get; }

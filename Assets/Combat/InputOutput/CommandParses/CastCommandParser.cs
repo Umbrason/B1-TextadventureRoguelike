@@ -11,12 +11,24 @@ args: string skillID";
 
     public ICommandParser.ParseResult Parse(ref Queue<string> args, CombatLog log)
     {
-        if (!skillTargetSelector.IsDone) skillTargetSelector.ParseInput(ref args, log.CurrentReadOnlyCombatState);
+        if (!skillTargetSelector.IsDone && skillTargetSelector.ParseInput(ref args, log.CurrentReadOnlyCombatState) == ITargetSelector.TargetSelectionResult.INVALID) return ICommandParser.ParseResult.CANCEL;
         if (!skillTargetSelector.IsDone) return ICommandParser.ParseResult.INCOMPLETE;
         var skill = (IReadOnlySkill)skillTargetSelector.Value;
+        if (skill.Cooldown.Value > 0)
+        {
+            ConsoleOutput.Println($"{skill.GetType().Name} is still on cooldown.");
+            return ICommandParser.ParseResult.CANCEL;
+        }
+        if (!skill.CanUse(CombatManager.CombatLog.CurrentReadOnlyCombatState, CombatManager.CombatLog.CurrentReadOnlyCombatState.ActiveActor))
+        {
+            ConsoleOutput.Println($"Could not cast {skill.GetType().Name}");
+            return ICommandParser.ParseResult.CANCEL;
+        }
+
         if (skillTargetSelectors == null)
             skillTargetSelectors = new Queue<ITargetSelector>(skill.TargetSelectors);
-        skillTargetSelectors.Peek().Reset();
+
+        if (skillTargetSelectors.Count > 0) skillTargetSelectors.Peek().Reset();
         while (skillTargetSelectors.Count > 0)
         {
             var parseResult = skillTargetSelectors.Peek().ParseInput(ref args, log.CurrentReadOnlyCombatState);
@@ -25,7 +37,7 @@ args: string skillID";
             finishedTargetSelectors.Add(skillTargetSelectors.Dequeue());
             if (skillTargetSelectors.Count > 0) skillTargetSelectors.Peek().Reset();
         }
-        var targetActor = log.CurrentReadOnlyCombatState.ActiveActor;        
+        var targetActor = log.CurrentReadOnlyCombatState.ActiveActor;
         log.CastSkill(targetActor, skill, finishedTargetSelectors.ToArray());
 
         return ICommandParser.ParseResult.FINISHED;

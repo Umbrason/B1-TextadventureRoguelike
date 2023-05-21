@@ -27,7 +27,11 @@ public class SkillTargetSelector : ITargetSelector
         }
         var skillID = args.Dequeue();
         var valid = targetActor.Skills.Any(skill => string.Compare(skill.GetType().Name, skillID, true) == 0);
-        if (!valid) return ITargetSelector.TargetSelectionResult.INVALID;
+        if (!valid)
+        {
+            ConsoleOutput.Println($"Skill '{skillID}' not found.");
+            return ITargetSelector.TargetSelectionResult.INVALID;
+        }
         skill = targetActor.Skills.First(skill => string.Compare(skill.GetType().Name, skillID, true) == 0);
         return ITargetSelector.TargetSelectionResult.FINISHED;
     }
@@ -35,7 +39,7 @@ public class SkillTargetSelector : ITargetSelector
     public void Reset() => skill = null;
 
     public bool IsValid(object value, IReadOnlyCombatState state)
-    {        
+    {
         return state.ActiveActor?.Skills.Contains((IReadOnlySkill)value) ?? false;
     }
 }

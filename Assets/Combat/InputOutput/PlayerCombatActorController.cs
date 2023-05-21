@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 
 public class PlayerCombatActorController : MonoBehaviour
-{    
+{
     void Awake()
     {
         ConsoleTextInput.OnSubmitLine += ParseInput;
@@ -31,6 +31,8 @@ public class PlayerCombatActorController : MonoBehaviour
     {
         new OPCode(typeof(MoveCommandParser), "move", "mv"),
         new OPCode(typeof(CastCommandParser), "cast", "skill"),
+        new OPCode(typeof(EndTurnCommandParser), "end", "done"),
+        new OPCode(typeof(InfoCommandParser), "info", "stats"),
     };
 
     private ICommandParser parser;
@@ -38,10 +40,14 @@ public class PlayerCombatActorController : MonoBehaviour
     {
         var combatLog = CombatManager.CombatLog;
         var activeActor = combatLog.CurrentReadOnlyCombatState.ActiveActor;
-        if (activeActor == null || activeActor.Alignment != 0) return;
+        if (activeActor == null || !(activeActor is PlayableCombatActor))
+        {
+            ConsoleOutput.Println("It's not your turn.");
+            return;
+        }
         var keywords = new Queue<string>(input.Split(' '));
-        if(keywords.Count == 0 || keywords.Peek().Length == 0) return;
-        
+        if (keywords.Count == 0 || keywords.Peek().Length == 0) return;
+
         if (parser == null)
         {
             var op = keywords.Dequeue();
@@ -54,7 +60,7 @@ public class PlayerCombatActorController : MonoBehaviour
             parser = opCodeInfo.CommandParser;
         }
         var result = parser.Parse(ref keywords, combatLog);
-        if(result == ICommandParser.ParseResult.CANCEL) ConsoleOutput.Println($"Canceled");
+        if (result == ICommandParser.ParseResult.CANCEL) ConsoleOutput.Println($"Canceled");
         parser = result == ICommandParser.ParseResult.INCOMPLETE ? parser : null;
         return;
     }

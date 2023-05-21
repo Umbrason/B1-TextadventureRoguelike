@@ -10,11 +10,28 @@ public class WorldMapRenderer : MonoBehaviour
     public LineRenderer LocationEdgeTemplate;
 
     [SerializeField] private Sprite CombatLocationSprite;
+    [SerializeField] private Sprite EliteCombatLocationSprite;
+    [SerializeField] private Sprite BossCombatLocationSprite;
     [SerializeField] private Sprite DefaultLocationSprite;
+    [SerializeField] private Sprite Campfire;
+    [SerializeField] private Sprite Shop;
+    [SerializeField] private Sprite[] ShopIcons;
+
     private Dictionary<Type, Sprite> cached_LocationSprites;
     public Dictionary<Type, Sprite> LocationSprites => cached_LocationSprites ??= new()
     {
-        {typeof(CombatLocation), CombatLocationSprite},
+        {typeof(GoblinEncounter), CombatLocationSprite},
+        {typeof(GoblinAmbush), EliteCombatLocationSprite},
+        {typeof(GoblinLair), BossCombatLocationSprite},
+        {typeof(Graveyard), CombatLocationSprite},
+        {typeof(Chappel), EliteCombatLocationSprite},
+        {typeof(Cathedral), BossCombatLocationSprite},
+        {typeof(HellChunk), CombatLocationSprite},
+        {typeof(HellIsland), EliteCombatLocationSprite},
+        {typeof(ArchdemonLair), BossCombatLocationSprite},
+        {typeof(SkillShop), Shop},
+        {typeof(PowerWell), DefaultLocationSprite},
+        {typeof(RestingPlace), Campfire}
     };
 
     public void Start()
@@ -22,14 +39,15 @@ public class WorldMapRenderer : MonoBehaviour
         Render();
     }
 
-    public void Move(int depth, int index)
+    public Vector2 CalcMapCenter()
     {
         var map = RunManager.ReadOnlyRunInfo.ReadOnlyWorldMap;
+        var currentDepth = RunManager.ReadOnlyRunInfo.CurrentDepth;
+        var currentIndex = RunManager.ReadOnlyRunInfo.CurrentIndex;
+        if (currentDepth == -1) return default;
         var seed = map.Seed;
-        var layerSize = map.ReadOnlyMapLocations.ElementAt(depth).Count;
-        var worldPos = DepthIndexToWorld(depth, index, layerSize, seed);
-        Camera.main.transform.position = worldPos;
-        Render();
+        var layerSize = map.ReadOnlyMapLocations.ElementAt(currentDepth).Count;
+        return DepthIndexToWorld(currentDepth, currentIndex, layerSize, seed);
     }
 
     private readonly List<GameObject> visuals = new();
@@ -43,6 +61,7 @@ public class WorldMapRenderer : MonoBehaviour
     public void Render()
     {
         ClearVisuals();
+        transform.position = Vector3.zero;
         var map = RunManager.ReadOnlyRunInfo.ReadOnlyWorldMap;
         var currentDepth = RunManager.ReadOnlyRunInfo.CurrentDepth;
         var currentIndex = RunManager.ReadOnlyRunInfo.CurrentIndex;
@@ -56,8 +75,18 @@ public class WorldMapRenderer : MonoBehaviour
                 var location = locations.ElementAt(depth).ElementAt(index);
                 var instance = Instantiate(LocationNodeTemplate, transform);
                 ((Image)instance.targetGraphic).sprite = LocationSprites[location.GetType()];
-                instance.interactable = (depth == currentDepth + 1);
-                instance.enabled = !(RunManager.ReadOnlyRunInfo.Path.Contains((depth, index)) || (depth == currentDepth && index == currentIndex));
+                if (location is SkillShop)
+                    ((Image)instance.targetGraphic).sprite = ShopIcons[(int)((SkillShop)location).SkillGroup];
+                var isNextLayer = depth == currentDepth + 1;
+                var isFirstLayer = depth == 0;
+                var isConnectedToCurrent = (currentDepth == -1 && isFirstLayer) ||
+                                           (isNextLayer && map.ReadOnlyMapConnections.ElementAt(currentDepth).ElementAt(currentIndex).Contains(index));
+                var isInteractable = isConnectedToCurrent;
+                instance.interactable = isInteractable;
+
+                var isInPath = (RunManager.ReadOnlyRunInfo.Path.Count > depth) && (RunManager.ReadOnlyRunInfo.Path.ElementAt(depth) == index);
+                instance.enabled = !isInPath; //disable button to turn white when isInPath
+
                 var locationAdvanceIndex = index;
                 instance.onClick.AddListener(() => RunManager.AdvanceLocation(locationAdvanceIndex));
                 instance.transform.position = DepthIndexToWorld(depth, index, layerCount, seed);
@@ -65,24 +94,28 @@ public class WorldMapRenderer : MonoBehaviour
             }
         }
         var edges = map.ReadOnlyMapConnections;
-        for (int depth = 0; depth < edges.Count; depth++)
+        for (int fromDepth = 0; fromDepth < edges.Count; fromDepth++)
         {
-            var layerCount = edges.ElementAt(depth).Count;
-            var nextLayerCount = locations.ElementAt(depth + 1).Count;
-            for (int index = 0; index < layerCount; index++)
+            var layerCount = edges.ElementAt(fromDepth).Count;
+            var nextLayerCount = locations.ElementAt(fromDepth + 1).Count;
+            for (int fromIndex = 0; fromIndex < layerCount; fromIndex++)
             {
-                var edgeCount = edges.ElementAt(depth).ElementAt(index);
-                foreach (var edge in edgeCount)
+                var toIndices = edges.ElementAt(fromDepth).ElementAt(fromIndex);
+                foreach (var toIndex in toIndices)
                 {
-                    var from = DepthIndexToWorld(depth, index, layerCount, seed) + Vector2.right * 1.5f;
-                    var to = DepthIndexToWorld(depth + 1, edge, nextLayerCount, seed) - Vector2.right * 1.5f;
+                    var from = DepthIndexToWorld(fromDepth, fromIndex, layerCount, seed) + Vector2.right * 1.5f;
+                    var to = DepthIndexToWorld(fromDepth + 1, toIndex, nextLayerCount, seed) - Vector2.right * 1.5f;
                     var lr = Instantiate(LocationEdgeTemplate, transform);
-                    var containsFrom = RunManager.ReadOnlyRunInfo.Path.Contains((depth, index));
-                    var containsTo = RunManager.ReadOnlyRunInfo.Path.Contains((depth + 1, edge)) || (depth == currentDepth && edge == currentIndex);
+                    lr.useWorldSpace = false;
+
+                    var isFromInPath = (RunManager.ReadOnlyRunInfo.Path.Count > fromDepth) && (RunManager.ReadOnlyRunInfo.Path.ElementAt(fromDepth) == fromIndex);
+                    var isToInPath = (RunManager.ReadOnlyRunInfo.Path.Count > fromDepth + 1) && (RunManager.ReadOnlyRunInfo.Path.ElementAt(fromDepth + 1) == toIndex);
+                    var isConnectedToCurrent = fromDepth == currentDepth && fromIndex == currentIndex;
+
                     lr.startColor = lr.endColor =
-                    containsFrom & containsTo ?
+                    isFromInPath && isToInPath ?
                         Color.white :
-                        depth == currentDepth ?
+                        isConnectedToCurrent ?
                             new Color(.5f, .5f, .5f, 1) :
                             new Color(.2f, .2f, .2f, 1);
                     lr.SetPositions(new Vector3[] { from, to });
@@ -90,6 +123,7 @@ public class WorldMapRenderer : MonoBehaviour
                 }
             }
         }
+        transform.position = -CalcMapCenter();
     }
 
 

@@ -9,18 +9,19 @@ public class RunInfo : IBinarySerializable, IReadOnlyRunInfo
     public IReadOnlyWorldMap ReadOnlyWorldMap => map;
     public IReadOnlyPartyInfo ReadOnlyPartyInfo => party;
 
-    public int CurrentDepth { get; private set; } = -1;
-    public int CurrentIndex { get; private set; }
+    public int CurrentDepth => pathList.Count - 1;
+    public int CurrentIndex => pathList.LastOrDefault();
+    public int Gold { get; set; } = 50;
+    public bool Won { get; set; }
     public IWorldLocation CurrentLocation => map.MapLocations[CurrentDepth][CurrentIndex];
 
-    private List<(int, int)> pathList = new();
-    public IReadOnlyCollection<(int, int)> Path => pathList;
+    private List<int> pathList = new();
+    public IReadOnlyCollection<int> Path => pathList;
 
     public void AdvanceLocation(int pathChoice)
     {
-        pathList.Add((CurrentDepth, CurrentIndex));
-        CurrentDepth++;
-        CurrentIndex = map.Connections[CurrentDepth][CurrentIndex][pathChoice];
+        if (!(CurrentDepth == -1 || map.Connections[CurrentDepth][CurrentIndex].Contains(pathChoice))) return;
+        pathList.Add(pathChoice);
     }
 
     public byte[] ByteData
@@ -30,9 +31,7 @@ public class RunInfo : IBinarySerializable, IReadOnlyRunInfo
             var stream = new MemoryStream();
             stream.WriteIBinarySerializable(map);
             stream.WriteIBinarySerializable(party);
-            stream.WriteInt(CurrentDepth);
-            stream.WriteInt(CurrentIndex);
-            stream.WriteEnumerable(pathList, (pair) => { stream.WriteInt(pair.Item1); stream.WriteInt(pair.Item2); });
+            stream.WriteEnumerable(pathList, stream.WriteInt);
             return stream.GetAllBytes();
         }
         set
@@ -40,9 +39,7 @@ public class RunInfo : IBinarySerializable, IReadOnlyRunInfo
             var stream = new MemoryStream(value);
             map = stream.ReadIBinarySerializable<Worldmap>();
             party = stream.ReadIBinarySerializable<PartyInfo>();
-            CurrentDepth = stream.ReadInt();
-            CurrentIndex = stream.ReadInt();
-            pathList = stream.ReadEnumerable(() => (stream.ReadInt(), stream.ReadInt())).ToList();
+            pathList = stream.ReadEnumerable(stream.ReadInt).ToList();
         }
     }
 }
@@ -53,6 +50,8 @@ public interface IReadOnlyRunInfo
     public IReadOnlyPartyInfo ReadOnlyPartyInfo { get; }
     public int CurrentDepth { get; }
     public int CurrentIndex { get; }
-    public IReadOnlyCollection<(int, int)> Path { get; }
+    public int Gold { get; }
+    public bool Won { get; }
+    public IReadOnlyCollection<int> Path { get; }
     public IReadOnlyWorldLocation CurrentLocation => ReadOnlyWorldMap.ReadOnlyMapLocations.ElementAt(CurrentDepth).ElementAt(CurrentIndex);
 }
