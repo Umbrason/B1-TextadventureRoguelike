@@ -6,12 +6,12 @@ public static class Shapes
     public static Vector2Int[] GridLine(Vector2Int from, Vector2Int to)
     {
         var delta = to - from;
-        var length = delta.x + delta.y;
         var m = Mathf.Abs(delta.x) > 0 ? delta.y / (float)delta.x : delta.y;
         var y = from.y;
         var dy = 0f;
+        var dx = Mathf.RoundToInt(Mathf.Sign(delta.x));
         var positions = new List<Vector2Int>();
-        for (int x = from.x; x <= to.x; x++)
+        for (int x = from.x; x != to.x; x += dx)
         {
             dy += m;
             while (dy >= 1)

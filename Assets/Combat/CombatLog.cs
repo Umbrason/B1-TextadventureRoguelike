@@ -90,6 +90,7 @@ public class CombatLog
         actor.Armor.Value = actor.Armor.Max;
         actor.ActionPoints.Value = actor.ActionPoints.Max;
         actor.MovementPoints.Value = actor.MovementPoints.Max;
+        foreach (var skill in actor.Skills) skill.Cooldown -= 1;
         var statusUpdateQueue = new Queue<IStatusEffect>(actor.StatusEffects);
         while (statusUpdateQueue.Count > 0)
         {
@@ -159,8 +160,8 @@ public class CombatLog
     public void BuildTurnQueue()
     {
         var teamDict = new SortedList<int, List<ICombatActor>>();
-        var actors = CurrentState.CombatActors;
-        foreach (var actor in actors.Values)
+        var actorsWithInit = CurrentState.CombatActors.Values.Where(actor => actor.Initiative >= 0).ToArray();
+        foreach (var actor in actorsWithInit)
         {
             var bucket = teamDict.ContainsKey(actor.Alignment) ? teamDict[actor.Alignment] : teamDict[actor.Alignment] = new();
             bucket.Add(actor);
@@ -168,7 +169,7 @@ public class CombatLog
         }
         var alignments = teamDict.Keys.OrderBy(alignment => teamDict[alignment][0].Alignment).ToArray();
         int teamIndex = 0;
-        while (CurrentState.TurnQueue.Count < actors.Count)
+        while (CurrentState.TurnQueue.Count < actorsWithInit.Length)
         {
             var bucket = teamDict[alignments[teamIndex]];
             if (bucket.Count > 0)

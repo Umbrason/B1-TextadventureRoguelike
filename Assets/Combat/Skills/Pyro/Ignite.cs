@@ -6,7 +6,7 @@ public class Ignite : ISkill, ISkillWithRange, ISkillWithDamage
     public ClampedInt Cooldown { get; set; } = new(0, 1, 0);
     public int APCost { get; set; } = 1;
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
-        new RangedPositionSelector(requiresLOS: true, requiresTileWalkable: true, range: Range)
+        new ActorTargetSelector(requiresLOS: true, range: Range)
     };
     public int Range { get; set; } = 10;
     public SkillGroup SkillGroup => SkillGroup.PYROMANCY;

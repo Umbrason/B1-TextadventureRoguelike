@@ -130,6 +130,7 @@ public class CombatState : IReadOnlyCombatState, IBinarySerializable
         this.CombatActors.Remove(actorGuid);
         foreach (var status in actor.StatusEffects)
             status.OnDie(actor, this);
+        TurnQueue = new Queue<Guid>(TurnQueue?.Where(guid => guid != actor.Guid));
         return this;
     }
 
@@ -191,48 +192,13 @@ public class CombatState : IReadOnlyCombatState, IBinarySerializable
         return damageResult;
     }
 
-    public CombatState WithModifiedActor(ICombatActor actor)
-    {
-        var modifiedActors = new Dictionary<Guid, ICombatActor>(CombatActors);
-        modifiedActors[actor.Guid] = actor;
-        return this.WithActors(modifiedActors);
-    }
-
-    public CombatState WithRoom(RoomInfo room) => new(room, CombatActors, TurnQueue, ActiveActorGuid);
-    public CombatState WithActors(Dictionary<Guid, ICombatActor> actors) => new(Room, actors, TurnQueue, ActiveActorGuid);
-    public CombatState WithTurnQueue(Queue<Guid> turnQueue) => new(Room, CombatActors, turnQueue, ActiveActorGuid);
-    public CombatState WithActiveActor(Guid? activeActorGuid) => new(Room, CombatActors, TurnQueue, activeActorGuid);
-
-    private void BuildTurnQueue()
-    {
-        var teamDict = new SortedList<int, SortedList<int, ICombatActor>>();
-        var CombatActorsWithInit = CombatActors.Values.Where(ca => ca.Initiative >= 0).ToArray();
-        foreach (var actor in CombatActorsWithInit)
-        {
-            var bucket = teamDict.ContainsKey(actor.Alignment) ? teamDict[actor.Alignment] : teamDict[actor.Alignment] = new();
-            bucket.Add(int.MaxValue - actor.Initiative, actor);
-        }
-        var alignments = teamDict.Keys.OrderBy(alignment => teamDict[alignment].Keys[0]).ToArray();
-        int teamIndex = 0;
-        while (TurnQueue.Count < CombatActorsWithInit.Length)
-        {
-            var bucket = teamDict[alignments[teamIndex]];
-            if (bucket.Count > 0)
-            {
-                TurnQueue.Enqueue(bucket.Values[bucket.Count - 1].Guid);
-                bucket.RemoveAt(bucket.Count - 1);
-            }
-            teamIndex = ++teamIndex % alignments.Length;
-        }
-    }
-
     public float EvaluateCurrentState(Guid ActorGuid, AIProfile profile)
     {
         var self = CombatActors.ContainsKey(ActorGuid) ? CombatActors[ActorGuid] : null;
         var score = 0f;
         if (self == null) return -profile.selfAliveWeight;
-        var nearestEnemyDistance = float.MaxValue;
-        var nearestAllyDistance = float.MaxValue;
+        var nearestEnemyDistance = (float?)null;
+        var nearestAllyDistance = (float?)null;
         foreach (var actor in CombatActors.Values)
         {
             if (actor.Alignment < 0) continue;
@@ -240,16 +206,16 @@ public class CombatState : IReadOnlyCombatState, IBinarySerializable
             var isSelf = actor == self;
             var pathfinder = new Pathfinder(p => IsTileWalkable(p) || p == actor.Position);
             var distance = pathfinder.FromTo(self.Position, actor.Position).Length;
-            if (ownTeam && !isSelf && distance > 0) nearestAllyDistance = Mathf.Min(nearestAllyDistance, distance);
-            if (!ownTeam && distance > 0) nearestEnemyDistance = Mathf.Min(nearestEnemyDistance, distance);
+            if (ownTeam && !isSelf && distance > 0) nearestAllyDistance = Mathf.Min(nearestAllyDistance ?? float.MaxValue, distance);
+            if (!ownTeam && distance > 0) nearestEnemyDistance = Mathf.Min(nearestEnemyDistance ?? float.MaxValue, distance);
             var healthWeight = isSelf ? profile.selfHealthWeight : ownTeam ? profile.alliesHealthWeight : profile.enemiesHealthWeight;
             var armorWeight = isSelf ? profile.selfArmorWeight : ownTeam ? profile.alliesArmorWeight : profile.enemiesArmorWeight;
             score += ownTeam ? profile.alliesAliveCountWeight : profile.enemiesAliveCountWeight;
             score += healthWeight * actor.Health;
             score += armorWeight * actor.Armor;
         }
-        score += nearestEnemyDistance * profile.distanceToNearestEnemyWeight;
-        score += nearestAllyDistance * profile.distanceToNearestAllyWeight;
+        score += Mathf.Abs(profile.preferredDistanceToEnemy - (nearestEnemyDistance ?? 0)) * profile.distanceToNearestEnemyWeight;
+        score += (nearestAllyDistance ?? 0) * profile.distanceToNearestAllyWeight;
         return score;
     }
 }

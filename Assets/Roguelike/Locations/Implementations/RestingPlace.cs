@@ -1,22 +1,6 @@
-using System.IO;
-using UnityEngine;
-
 public class RestingPlace : IWorldLocation
 {
-    byte[] IBinarySerializable.ByteData
-    {
-        get
-        {
-            var stream = new MemoryStream();
-            return stream.GetAllBytes();
-        }
-        set
-        {
-            var stream = new MemoryStream(value);
-        }
-    }
-    public string Name { get; private set; }
-    public Sprite Image { get; private set; }
+    public string Name { get; private set; } = "RestingPlace";
     public string storyText => "You feel at ease in this location. You decide to stay for a short while bevor moving on.\nHow would you like to spend your time?";
     public string[] optionTexts => new string[] { "Rest", "Train", "Eat" };
     public void OnPickOption(int option, RunInfo run)
@@ -33,7 +17,7 @@ public class RestingPlace : IWorldLocation
                 run.party.PartyLeader.ActionPoints.Max += 1;
                 run.party.PartyLeader.MovementPoints.Max += 2;
                 run.party.PartyLeader.Initiative += 2;
-                ConsoleOutput.Println("Your feel stronger");
+                ConsoleOutput.Println("Your feel faster");
                 RunManager.ShowWorldMap();
                 break;
             case 2:

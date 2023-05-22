@@ -22,7 +22,7 @@ public class SporeCloud : ISkill, ISkillWithRange, ISkillWithRadius, ISkillWithD
         var area = Shapes.GridCircle(targetPosition, Radius);
         var actorsInArea = area.Where(p => combatState.ActorPositions.ContainsKey(p))
         .Select(p => combatState.CombatActors[combatState.ActorPositions[p]])
-        .Where(p => p.Alignment == user.Alignment)
+        .Where(p => p.Alignment != user.Alignment)
         .ToArray();
         foreach (var target in actorsInArea)
         {

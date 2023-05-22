@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class DetonateMushroom : ISkill, ISkillWithRange, ISkillWithDamage
 {
-    public string Description => "";
+    public string Description => "Detonate a mushroom for massive damage!";
     public ClampedInt Cooldown { get; set; } = new(0, 4, 0);
     public int APCost { get; set; } = 1;
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
-        new ActorTargetSelector(true, Range, (state, p) => state.CombatActors[state.ActorPositions[p]] is Mushroom)
+        new ActorTargetSelector(true, Range, false, (state, p) => state.CombatActors[state.ActorPositions[p]] is Mushroom)
     };
 
     public int Range { get; set; } = 20;

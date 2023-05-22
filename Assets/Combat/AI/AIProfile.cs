@@ -15,6 +15,8 @@ public struct AIProfile
 
     public float distanceToNearestEnemyWeight;
     public float distanceToNearestAllyWeight;
+
+    public float preferredDistanceToEnemy;
 }
 
 public static class AIProfiles
@@ -31,6 +33,7 @@ public static class AIProfiles
         enemiesAliveCountWeight = -999,
         distanceToNearestEnemyWeight = -1,
         distanceToNearestAllyWeight = 1,
+        preferredDistanceToEnemy = 0,
     };
 
     public static AIProfile RANGED => new()
@@ -43,8 +46,9 @@ public static class AIProfiles
         enemiesArmorWeight = -5,
         alliesAliveCountWeight = 10,
         enemiesAliveCountWeight = -99,
-        distanceToNearestEnemyWeight = 10,
-        distanceToNearestAllyWeight = 1,
+        distanceToNearestEnemyWeight = -1,
+        distanceToNearestAllyWeight = 2,
+        preferredDistanceToEnemy = 10,
     };
 
     public static AIProfile MELEE => new()
@@ -59,6 +63,7 @@ public static class AIProfiles
         enemiesAliveCountWeight = -99,
         distanceToNearestEnemyWeight = -20,
         distanceToNearestAllyWeight = 1,
+        preferredDistanceToEnemy = 0,
     };
 }
 

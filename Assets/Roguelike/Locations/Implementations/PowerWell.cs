@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using UnityEngine;
@@ -7,7 +8,20 @@ public class PowerWell : IWorldLocation
 {
 
 
-    public byte[] ByteData { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
+    public byte[] ByteData
+    {
+        get
+        {
+            var stream = new MemoryStream();
+            stream.WriteEnumerable(skillIndices, stream.WriteInt);
+            return stream.GetAllBytes();
+        }
+        set
+        {
+            var stream = new MemoryStream(value);
+            skillIndices = stream.ReadEnumerable(stream.ReadInt);
+        }
+    }
 
     //decrease AP
     //decrease CD

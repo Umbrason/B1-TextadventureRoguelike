@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class SummonMushroom : ISkill, ISkillWithRange
 {
-    public string Description => "Summon a mushroom";
+    public string Description => "Summon a mushroom to aid you in battle.";
     public ClampedInt Cooldown { get; set; } = new(0, 0, 0);
-    public int APCost { get; set; } = 1;
+    public int APCost { get; set; } = 2;
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
         new RangedPositionSelector(true, true, Range)
     };

@@ -50,22 +50,16 @@ public class AICombatActorController : MonoBehaviour
     private float lastMove = -1;
     void Update()
     {
-        if (Time.time < lastMove + DelayBetweenMoves || AITurnActions.Count == 0) return;
-        if (!AITurnActions.TryDequeue(out var turnAction)) return;
+        if (Time.time < lastMove + DelayBetweenMoves || AITurnActions.Count == 0) return;        
+        if (!AITurnActions.TryDequeue(out var turnAction)) return;        
         lastMove = Time.time;
         var state = CombatManager.CombatLog.CurrentReadOnlyCombatState;
-        if (turnAction.skillToCast == null && turnAction.positionToMoveTo == state.ActiveActor.Position)
-        {
-            CombatManager.CombatLog.EndTurn();
-            return;
-        }
+        
         if (turnAction.positionToMoveTo != state.ActiveActor.Position)
-        {
             CombatManager.CombatLog.MoveActor(state.ActiveActor, turnAction.positionToMoveTo);
-        }
         if (turnAction.skillToCast != null)
-        {
             CombatManager.CombatLog.CastSkill(state.ActiveActor, turnAction.skillToCast, turnAction.parametersToUse);
-        }
+        else
+            CombatManager.CombatLog.EndTurn();
     }
 }
