@@ -54,6 +54,7 @@ public class AICombatActorController : MonoBehaviour
         if (!AITurnActions.TryDequeue(out var turnAction)) return;        
         lastMove = Time.time;
         var state = CombatManager.CombatLog.CurrentReadOnlyCombatState;
+        if(!(state.ActiveActor is AICombatActor)) return;
         
         if (turnAction.positionToMoveTo != state.ActiveActor.Position)
             CombatManager.CombatLog.MoveActor(state.ActiveActor, turnAction.positionToMoveTo);

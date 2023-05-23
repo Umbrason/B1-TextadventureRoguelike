@@ -5,6 +5,7 @@ using UnityEngine;
 public class Aeromancer : PlayableCombatActor
 {
     public override List<ISkill> Skills { get; set; } = new() {
+        new Slash(),
         new Gust(),
         new Teleport(),
     };

@@ -3,8 +3,8 @@ using UnityEngine;
 public class Ignite : ISkill, ISkillWithRange, ISkillWithDamage
 {
     public string Description => "Ignite a flamable surface or creature";
-    public ClampedInt Cooldown { get; set; } = new(0, 1, 0);
-    public int APCost { get; set; } = 1;
+    public ClampedInt Cooldown { get; set; } = new(0, 0, 0);
+    public int APCost { get; set; } = 2;
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
         new ActorTargetSelector(requiresLOS: true, range: Range)
     };

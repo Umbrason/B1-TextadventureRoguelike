@@ -4,6 +4,7 @@ using UnityEngine;
 public class Necromancer : PlayableCombatActor
 {
     public override List<ISkill> Skills { get; set; } = new() {
+        new Slash(),
         new LifeDrain(),
         new NecroticTouch()
     };

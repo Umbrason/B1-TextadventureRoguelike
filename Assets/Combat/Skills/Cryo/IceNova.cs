@@ -9,7 +9,7 @@ public class IceNova : ISkill, ISkillWithRadius, ISkillWithDamage
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
     };
     public int Radius { get; set; } = 20;
-    public int Damage { get; set; } = 4;
+    public int Damage { get; set; } = 5;
 
     public SkillGroup SkillGroup => SkillGroup.CRYOMANCY;
 

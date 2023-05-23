@@ -19,7 +19,7 @@ public class Imp : ICombatActor, AICombatActor
         new Slash(),
         new Ignite(),
     };
-    public AIProfile Profile => AIProfiles.RANGED;
+    public AIProfile Profile => AIProfiles.MELEE;
 
     public int StunSources { get; set; }
     public Color Color => new Color(.8f, .2f, .0f);

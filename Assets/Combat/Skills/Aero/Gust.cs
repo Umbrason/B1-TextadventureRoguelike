@@ -5,14 +5,14 @@ using UnityEngine;
 public class Gust : ISkill, ISkillWithRange, ISkillWithDamage
 {
     public string Description => "Pushes back enemies in a coneshape";
-    public ClampedInt Cooldown { get; set; } = new(0, 1, 0);
-    public int APCost { get; set; } = 1;
+    public ClampedInt Cooldown { get; set; } = new(0, 0, 0);
+    public int APCost { get; set; } = 2;
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
         new RangedPositionSelector(false, false, Range)
     };
     public SkillGroup SkillGroup => SkillGroup.AEROMANCY;
     public int Range { get; set; } = 8;
-    public int Damage { get; set; } = 2;
+    public int Damage { get; set; } = 3;
 
     private const float Angle = 45f;
 

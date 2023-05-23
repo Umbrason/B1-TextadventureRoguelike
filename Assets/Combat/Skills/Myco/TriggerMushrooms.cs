@@ -3,15 +3,15 @@ using System.Linq;
 public class TriggerMushrooms : ISkill, ISkillWithRange, ISkillWithDamage, ISkillWithRadius
 {
     public string Description => "Trigger all nearby mushroom to release spores";
-    public ClampedInt Cooldown { get; set; } = new(0, 2, 0);
+    public ClampedInt Cooldown { get; set; } = new(0, 0, 0);
     public int APCost { get; set; } = 2;
     public ITargetSelector[] TargetSelectors => new ITargetSelector[] {
     };
 
     public SkillGroup SkillGroup => SkillGroup.MYCOMANCY;
 
-    public int Range { get; set; } = 20;
-    public int Radius { get; set; } = 4;
+    public int Range { get; set; } = 10;
+    public int Radius { get; set; } = 3;
     public int Damage { get; set; } = 4;
 
     public void Execute(CombatState combatState, ICombatActor user, params object[] parameters)

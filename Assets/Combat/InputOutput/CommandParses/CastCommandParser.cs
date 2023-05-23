@@ -26,16 +26,18 @@ args: string skillID";
         }
 
         if (skillTargetSelectors == null)
+        {
+            var selectors = skill.TargetSelectors;
+            foreach(var selector in selectors) selector.Reset();
             skillTargetSelectors = new Queue<ITargetSelector>(skill.TargetSelectors);
-
-        if (skillTargetSelectors.Count > 0) skillTargetSelectors.Peek().Reset();
+        }
+        
         while (skillTargetSelectors.Count > 0)
         {
             var parseResult = skillTargetSelectors.Peek().ParseInput(ref args, log.CurrentReadOnlyCombatState);
             if (parseResult == ITargetSelector.TargetSelectionResult.INVALID) return ICommandParser.ParseResult.CANCEL;
             if (parseResult == ITargetSelector.TargetSelectionResult.INCOMPLETE) return ICommandParser.ParseResult.INCOMPLETE;
             finishedTargetSelectors.Add(skillTargetSelectors.Dequeue());
-            if (skillTargetSelectors.Count > 0) skillTargetSelectors.Peek().Reset();
         }
         var targetActor = log.CurrentReadOnlyCombatState.ActiveActor;
         log.CastSkill(targetActor, skill, finishedTargetSelectors.ToArray());
